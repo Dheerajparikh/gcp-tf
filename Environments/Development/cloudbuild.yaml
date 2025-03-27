@@ -1,0 +1,53 @@
+steps:
+  # Step 1: Set up credentials
+  - name: 'gcr.io/cloud-builders/gcloud'
+    id: setup-credentials
+    entrypoint: 'sh'
+    args:
+      - '-c'
+      - |
+        echo "$GCP_SA_KEY" > /workspace/key.json
+        gcloud auth activate-service-account --key-file=/workspace/key.json
+    env:
+      - 'GCP_SA_KEY=$_DEV_GCP_SA_KEY'
+
+  # Step 2: Install Terraform and initialize
+  - name: 'hashicorp/terraform:1.5.0'
+    id: init
+    entrypoint: 'sh'
+    args:
+      - '-c'
+      - |
+        cd Environments/Development
+        terraform init
+
+  # Step 3: Terraform Plan
+  - name: 'hashicorp/terraform:1.5.0'
+    id: plan
+    entrypoint: 'sh'
+    args:
+      - '-c'
+      - |
+        cd Environments/Development
+        terraform plan -out=tfplan
+
+  # Step 4: Terraform Apply
+  - name: 'hashicorp/terraform:1.5.0'
+    id: apply
+    entrypoint: 'sh'
+    args:
+      - '-c'
+      - |
+        cd Environments/Development
+        terraform apply -auto-approve tfplan
+
+timeout: 1200s
+
+substitutions:
+  _DEV_PROJECT_ID: "dev-project-id"
+  _REGION: "us-central1"
+
+options:
+  env:
+    - TF_VAR_project_id=${_DEV_PROJECT_ID}
+    - TF_VAR_region=${_REGION}
