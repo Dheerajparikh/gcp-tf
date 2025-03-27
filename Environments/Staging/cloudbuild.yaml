@@ -1,0 +1,65 @@
+steps:
+  # Step 1: Set up credentials
+  - name: 'gcr.io/cloud-builders/gcloud'
+    id: setup-credentials
+    entrypoint: 'sh'
+    args:
+      - '-c'
+      - |
+        echo "$GCP_SA_KEY" > /workspace/key.json
+        gcloud auth activate-service-account --key-file=/workspace/key.json
+    env:
+      - 'GCP_SA_KEY=$_STAGING_GCP_SA_KEY'
+
+  # Step 2: Install Terraform and initialize
+  - name: 'hashicorp/terraform:1.5.0'
+    id: init
+    entrypoint: 'sh'
+    args:
+      - '-c'
+      - |
+        cd Environments/Staging
+        terraform init
+
+  # Step 3: Terraform Plan
+  - name: 'hashicorp/terraform:1.5.0'
+    id: plan
+    entrypoint: 'sh'
+    args:
+      - '-c'
+      - |
+        cd Environments/Staging
+        terraform plan -out=tfplan
+
+  # Step 4: Manual Approval
+  - name: 'gcr.io/cloud-builders/gcloud'
+    id: approval
+    entrypoint: 'bash'
+    args:
+      - '-c'
+      - |
+        echo "Waiting for manual approval..."
+    waitFor: ['plan']
+    # This step requires manual approval in Cloud Build UI
+
+  # Step 5: Terraform Apply (after approval)
+  - name: 'hashicorp/terraform:1.5.0'
+    id: apply
+    entrypoint: 'sh'
+    args:
+      - '-c'
+      - |
+        cd Environments/Staging
+        terraform apply -auto-approve tfplan
+    waitFor: ['approval']
+
+timeout: 1200s
+
+substitutions:
+  _STAGING_PROJECT_ID: "staging-project-id"
+  _REGION: "us-central1"
+
+options:
+  env:
+    - TF_VAR_project_id=${_STAGING_PROJECT_ID}
+    - TF_VAR_region=${_REGION}
