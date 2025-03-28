@@ -1,6 +1,6 @@
 variable "project_id" {
   type = string
-  default = "your-gcp-project-id"
+  default = "technosynz-dev-1"
 }
 
 variable "user_email" {
