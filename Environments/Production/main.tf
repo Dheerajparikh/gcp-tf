@@ -13,6 +13,7 @@ module "storage_bucket" {
 
 module "iam_user" {
   source     = "../../Modules/iam_user"
+  project_id = var.project_id
   user_email = "dhirajpareek59@gmail.com"
 }
 
