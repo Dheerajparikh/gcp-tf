@@ -20,4 +20,4 @@ variable "sql_user_name" {
 
 variable "sql_user_password" {
   type = string
-}
+} 
