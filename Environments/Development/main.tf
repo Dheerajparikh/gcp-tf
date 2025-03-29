@@ -13,7 +13,7 @@ module "storage_bucket" {
 
 module "iam_user" {
   source     = "../../Modules/iam_user"
-  user_email = "dev-user@yourdomain.com"
+  user_email = "dhirajpareek59@gmail.com"
 }
 
 module "cloud_sql" {
